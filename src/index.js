@@ -126,7 +126,21 @@ async function submit(request, env) {
   if (Object.values(fields).some(value => value.length > MAX_FIELD_LENGTH)) {
     return json({ ok: false, error: '시트의 기술적 저장 한도를 초과했습니다. 공고에 안내된 이메일로 제출해 주세요.' }, 400);
   }
-  if (!parseContact(fields.contact).ok) return json({ ok: false, error: '연락처에 올바른 휴대전화번호 또는 이메일 주소를 입력해 주세요. 둘 다 입력할 수도 있습니다.' }, 400);
+ // 연락처에 이메일 또는 11자리 휴대전화번호가 하나라도 있으면 허용
+const contactText = fields.contact;
+
+const hasEmail =
+  /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(contactText);
+
+const hasMobile =
+  /(?:^|[^\d])01[016789](?:[\s.-]?\d){8}(?!\d)/.test(contactText);
+
+if (!hasEmail && !hasMobile) {
+  return json({
+    ok: false,
+    error: '휴대전화번호 11자리 또는 이메일 주소를 입력해 주세요.'
+  }, 400);
+}
   try {
     const result = await callSheet(env, { action: 'submit', id: data.id, ...fields, consent: true });
     if (!result.ok && result.error === 'invalid contact') return json({ ok: false, error: '연락처 형식을 확인해 주세요.' }, 400);
