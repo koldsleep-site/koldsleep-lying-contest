@@ -83,11 +83,23 @@ async function callSheet(env, payload) {
   let response;
   try {
     response = await fetch(endpoint, {
-      method: 'POST', redirect: 'follow',
+      method: 'POST', redirect: 'manual',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...payload, secret })
     });
   } catch (_) { fail('SCRIPT_NETWORK_ERROR'); }
+  if ([301, 302, 303].includes(response.status)) {
+    let target;
+    try { target = new URL(response.headers.get('Location'), endpoint); }
+    catch (_) { fail('SCRIPT_REDIRECT_INVALID'); }
+    if (target.protocol !== 'https:' || target.hostname !== 'script.googleusercontent.com') {
+      fail('SCRIPT_REDIRECT_UNEXPECTED');
+    }
+    try {
+      response = await fetch(target.href, { method: 'GET', redirect: 'manual' });
+    } catch (_) { fail('SCRIPT_RESULT_NETWORK_ERROR'); }
+    if (!response.ok) fail('SCRIPT_RESULT_HTTP_ERROR', response.status);
+  }
   if (!response.ok) fail('SCRIPT_HTTP_ERROR', response.status);
   let result;
   try { result = await response.json(); }
