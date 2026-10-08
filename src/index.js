@@ -182,10 +182,26 @@ if (!hasEmail && !hasMobile) {
 
 async function randomLie(env) {
   try {
-    const result = await callSheet(env, { action: 'random' });
-    return json({ ok: true, lie_text: typeof result.lie_text === 'string' ? result.lie_text : '' });
-  } catch (_) {
-    return json({ ok: false }, 503);
+    const result = await callSheet(env, {
+      action: 'random'
+    });
+
+    return json({
+      ok: true,
+      lie_text: typeof result.lie_text === 'string'
+        ? result.lie_text
+        : ''
+    });
+
+  } catch (error) {
+    const message = String(error?.message || '');
+
+    return json({
+      ok: false,
+      code: /^SCRIPT_[A-Z_]+$/.test(message)
+        ? message
+        : 'UNKNOWN_ERROR'
+    }, 503);
   }
 }
 
