@@ -70,29 +70,46 @@ function scriptUrl(env) {
 }
 
 async function callSheet(env, payload) {
-  const endpoint = scriptUrl(env);
+  // Log only fixed codes and HTTP status; never payload, URL, secret or raw body.
+  const fail = (code, status) => {
+    console.error(JSON.stringify({ event: 'sheet_failure', code, ...(status ? { status } : {}) }));
+    throw new Error(code);
+  };
+  let endpoint;
+  try { endpoint = scriptUrl(env); }
+  catch (_) { fail('SCRIPT_URL_INVALID'); }
   const secret = String(env?.GOOGLE_SCRIPT_SECRET || '').trim();
-  if (!secret) throw new Error('Google Apps Script secret is not configured');
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    redirect: 'follow',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...payload, secret })
-  });
-  if (!response.ok) throw new Error('Google Apps Script request failed');
-  const result = await response.json();
-  if (!result || typeof result !== 'object' || !result.ok) {
-    const error = result?.error;
-    if (error === 'invalid contact') return { ok: false, error: 'invalid contact' };
-    if (error === 'closed') return { ok: false, error: 'closed' };
-    throw new Error('Google Apps Script storage failed');
+  if (!secret) fail('SCRIPT_SECRET_MISSING');
+  let response;
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST', redirect: 'follow',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, secret })
+    });
+  } catch (_) { fail('SCRIPT_NETWORK_ERROR'); }
+  if (!response.ok) fail('SCRIPT_HTTP_ERROR', response.status);
+  let result;
+  try { result = await response.json(); }
+  catch (_) { fail('SCRIPT_NON_JSON', response.status); }
+  if (!result || typeof result !== 'object' || result.ok !== true) {
+    if (result?.error === 'invalid contact') return { ok: false, error: 'invalid contact' };
+    if (result?.error === 'closed') return { ok: false, error: 'closed' };
+    const codes = {
+      'unauthorized': 'SCRIPT_UNAUTHORIZED',
+      'storage error': 'SCRIPT_STORAGE_ERROR',
+      'invalid action': 'SCRIPT_INVALID_ACTION',
+      'invalid submission': 'SCRIPT_INVALID_SUBMISSION',
+      'invalid fields': 'SCRIPT_INVALID_FIELDS'
+    };
+    fail(codes[result?.error] || 'SCRIPT_INVALID_RESPONSE', response.status);
   }
   return result;
 }
 
 function config(env) {
-  const value = String(env?.RECOMMENDATION_FORM_URL || 'https://docs.google.com/forms/d/e/1FAIpQLSezyQQMstLIopMKnQJDIxbZlt2gX9w_RXVR1ztR180_GURK2g/viewform?usp=header').trim();
+  const value = String(env?.RECOMMENDATION_FORM_URL || '').trim()
+    || 'https://docs.google.com/forms/d/e/1FAIpQLSezyQQMstLIopMKnQJDIxbZlt2gX9w_RXVR1ztR180_GURK2g/viewform?usp=header';
   try {
     const url = new URL(value);
     return json({ recommendation_url: url.protocol === 'https:' ? url.href : '' });
