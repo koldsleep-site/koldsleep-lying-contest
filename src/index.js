@@ -101,9 +101,33 @@ async function callSheet(env, payload) {
     if (!response.ok) fail('SCRIPT_RESULT_HTTP_ERROR', response.status);
   }
   if (!response.ok) fail('SCRIPT_HTTP_ERROR', response.status);
-  let result;
-  try { result = await response.json(); }
-  catch (_) { fail('SCRIPT_NON_JSON', response.status); }
+  const contentType =
+  response.headers.get('content-type') || '';
+
+const responseHost = (() => {
+  try {
+    return new URL(response.url).hostname;
+  } catch (_) {
+    return 'unknown';
+  }
+})();
+
+let result;
+
+try {
+  const body = await response.text();
+  result = JSON.parse(body);
+
+} catch (_) {
+  console.error(JSON.stringify({
+    event: 'sheet_response_format',
+    status: response.status,
+    contentType,
+    responseHost
+  }));
+
+  fail('SCRIPT_NON_JSON', response.status);
+}
   if (!result || typeof result !== 'object' || result.ok !== true) {
     if (result?.error === 'invalid contact') return { ok: false, error: 'invalid contact' };
     if (result?.error === 'closed') return { ok: false, error: 'closed' };
