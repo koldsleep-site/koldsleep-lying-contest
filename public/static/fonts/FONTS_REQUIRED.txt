@@ -1,0 +1,12 @@
+배포용 글꼴은 원본 7종을 public/static/fonts/에 직접 복사해 주세요.
+
+Pretendard-Regular.otf
+Galmuri11-Regular.ttf
+SongMyung-Regular.ttf
+GowunBatang-Regular.ttf
+NanumMyeongjo-Regular.ttf
+VT323-Regular.ttf
+OldStandard-Regular.ttf
+
+글꼴 파일은 이 코드 배포본에 재포함하지 않았습니다. 원본은 사용자 보유 파일을 사용합니다.
+라이선스 문서: docs/*-LICENSE.txt
