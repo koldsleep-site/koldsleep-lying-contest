@@ -4,11 +4,17 @@
   "main": "src/index.js",
   "compatibility_date": "2026-10-08",
   "keep_vars": true,
+
+  "vars": {
+    "GOOGLE_SCRIPT_URL": "https://script.google.com/macros/s/AKfycbz7lMnGJgVV3lWRlZs57Np8pkir0AgdJ5jzs4YkkZVUdIK2AXEUNxYLjv0EDE2tXkeR-w/exec"
+  },
+
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
     "run_worker_first": true
   },
+
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
