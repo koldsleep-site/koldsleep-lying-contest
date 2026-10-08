@@ -77,3 +77,44 @@ nav button span.kw-letter {
   display: inline-block;
   transform: translateY(var(--kw-baseline, 0em)) scaleX(var(--kw-stretch, 1));
 }
+
+/* koldsleep Lying Contest — disappearing inputs */
+
+/* 기본 상태: 흰색으로 사라짐 */
+#lie-form textarea,
+#lie-form input:not([type="checkbox"]) {
+  background: #fff;
+  color: #fff;
+  caret-color: transparent;
+
+  border: none;
+  border-radius: 0;
+  outline: none;
+
+  padding: 12px;
+  transition: background-color 0.12s ease;
+}
+
+/* 입력 중: 검정색으로 나타남 */
+#lie-form textarea:focus,
+#lie-form input:not([type="checkbox"]):focus {
+  background: #000;
+  color: #fff;
+  caret-color: #fff;
+
+  border: none;
+  outline: none;
+}
+
+/* 기존 포커스 테두리 제거 */
+#lie-form textarea:focus-visible,
+#lie-form input:not([type="checkbox"]):focus-visible {
+  outline: none;
+}
+
+/* 텍스트 선택 */
+#lie-form textarea::selection,
+#lie-form input::selection {
+  background: #fff;
+  color: #000;
+}
