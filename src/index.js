@@ -92,7 +92,7 @@ async function callSheet(env, payload) {
 }
 
 function config(env) {
-  const value = String(env?.RECOMMENDATION_FORM_URL || '').trim();
+  const value = String(env?.RECOMMENDATION_FORM_URL || 'https://docs.google.com/forms/d/e/1FAIpQLSezyQQMstLIopMKnQJDIxbZlt2gX9w_RXVR1ztR180_GURK2g/viewform?usp=header').trim();
   try {
     const url = new URL(value);
     return json({ recommendation_url: url.protocol === 'https:' ? url.href : '' });
